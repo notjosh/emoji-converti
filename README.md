@@ -2,7 +2,49 @@
 
 There a handful of "bitmap in font" standards - embedded bitmaps at various sizes, embedded SVGs, etc. Our goal is to convert the Apple font into something that can be read by Chrome and/or Firefox on Linux systems.
 
-## How That Might Work
+# Running
+
+There are two modes of running:
+
+1. With Docker
+1. Without Docker
+
+## With Docker
+
+As long as you have a copy of the emoji font (say, `Apple Color Emoji.ttc`), then you can run:
+
+```shell
+./run-in-docker.sh [/path/to/input/file]
+```
+
+After the image builds and runs, you should get a finished file in `assets/AppleColorEmoji.ttf`.
+
+## Without Docker
+
+Note: I've only tested this on macOS directly, but the Docker image runs on Ubuntu so should theoretically work elsewhere.
+
+### Prerequisites
+
+- `fontforge`
+- `ttx` (part of `fonttools`)
+- `xmlstarlet`
+- Python 3, with `pip install fonttools`
+
+Defaults assume you're using macOS, but it's not necessary.
+
+### Usage
+
+```shell
+./convert.sh [/path/to/input/file] [/path/to/output/file]
+```
+
+The input file is expected to be an instance of `Apple Color Emoji.ttc`, and will probably break in weird ways on other fonts.
+
+The default args (if run simply with `./convert.sh`) will read from `/System/Library/Fonts/Apple Color Emoji.ttc` and output to `./AppleColorEmoji.ttf`.
+
+# Background
+
+## How Emoji Fonts Can Work
 
 OpenType has a handful of sanctioned extensions:
 
@@ -25,25 +67,6 @@ Apple uses `mort` (deprecated) or `morx` to define their ligatures (part of AAT,
 1. Convert PNG tables (using `a2a.py`)
 1. Convert & inject ligature information (using `xmlstarlet` and `a2a.py`)
 1. Write our result to a file!
-
-# Prerequisites
-
-- `fontforge`
-- `ttx` (part of `fonttools`)
-- `xmlstarlet`
-- Python 3, with `pip install fonttools`
-
-Defaults assume you're using macOS, but it's not necessary.
-
-# Usage
-
-```shell
-./convert.sh [/path/to/input/file] [/path/to/output/file]
-```
-
-The input file is expected to be an instance of `Apple Color Emoji.ttc`, and will probably break in weird ways on other fonts.
-
-The default args (if run simply with `./convert.sh`) will read from `/System/Library/Fonts/Apple Color Emoji.ttc` and output to `./AppleColorEmoji.ttf`.
 
 # Prior Art
 
