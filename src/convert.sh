@@ -3,13 +3,15 @@
 SOURCE=${1:-"/System/Library/Fonts/Apple Color Emoji.ttc"}
 OUT=${2:-"./AppleColorEmoji.ttf"}
 
-XNAME="./AppleColorEmoji-vx.ttx"
-X2NAME="./AppleColorEmoji-v2.ttx"
-XGNAME="./AppleColorEmoji-GSUB.ttx"
-FFMNAME="./AppleColorEmoji-morx.ttf"
-FFGNAME="./AppleColorEmoji-GSUB.ttf"
+SCRIPT_PATH=$(dirname "$0")
 
-LIGATURES="./ligatures.xml" # don't change, it's referened in a2a.py
+XNAME="${SCRIPT_PATH}/AppleColorEmoji-vx.ttx"
+X2NAME="${SCRIPT_PATH}/AppleColorEmoji-v2.ttx"
+XGNAME="${SCRIPT_PATH}/AppleColorEmoji-GSUB.ttx"
+FFMNAME="${SCRIPT_PATH}/AppleColorEmoji-morx.ttf"
+FFGNAME="${SCRIPT_PATH}/AppleColorEmoji-GSUB.ttf"
+
+LIGATURES="${SCRIPT_PATH}/ligatures.xml" # don't change, it's referened in a2a.py
 
 FONTFORGE_EXECUTABLE="fontforge"
 
@@ -56,24 +58,31 @@ rm -f "${OUT}"
 #
 # we'll use `ttx` for this, as it would require rewriting checksums etc. we don't require `sbix` binary, so drop it for now
 ttx -o "${XNAME}" -y 0 -x sbix "${SOURCE}"
+test $? -eq 0 || { echo "❌ Error running ttx"; exit 1; }
 
 xmlstarlet ed -u '/ttFont/morx/Version/@value' -v '2' "${XNAME}" > "${X2NAME}"
+test $? -eq 0 || { echo "❌ Error running xmlstarlet"; exit 1; }
 
 ttx -o "${FFMNAME}" "${X2NAME}"
+test $? -eq 0 || { echo "❌ Error running ttx"; exit 1; }
 
 # export Apple's font in a non-Apple format (note: this will drop all the bitmaps, but we still have the glyph references/ligatures/etc)
-"${FONTFORGE_EXECUTABLE}" -script ./export-ligatures.pe "${FFMNAME}" "${FFGNAME}"
+"${FONTFORGE_EXECUTABLE}" -script "${SCRIPT_PATH}"/export-ligatures.pe "${FFMNAME}" "${FFGNAME}"
+test $? -eq 0 || { echo "❌ Error running FontForge"; exit 1; }
 
 # export the new font to XML
 ttx -o "${XGNAME}" "${FFGNAME}"
+test $? -eq 0 || { echo "❌ Error running ttx"; exit 1; }
 
 # strip out everything but the ligature information: GDEF, GPOS, GSUB
 xmlstarlet ed -d "/ttFont/*[not((name()='GDEF') or (name()='GPOS') or (name()='GSUB'))]" "${XGNAME}" > "${LIGATURES}"
+test $? -eq 0 || { echo "❌ Error running xmlstarlet"; exit 1; }
 
 # STEP 2: merge <GSUB> information into existing font
 
 # convert the font using an external script
-python3 ./a2a.py "${SOURCE}" "${OUT}"
+python3 "${SCRIPT_PATH}"/a2a.py "${SOURCE}" "${OUT}"
+test $? -eq 0 || { echo "❌ Error running python3"; exit 1; }
 
 echo
 

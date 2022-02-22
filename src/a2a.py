@@ -23,6 +23,7 @@
 import sys
 import io
 import struct
+import os
 
 def div(a, b):
     return int(round(a / float(b)))
@@ -507,7 +508,7 @@ def main(argv):
     print("Dropped 'sbix', outline ('glyf', 'CFF ') and related tables.")
 
     print("Inserting ligature tables")
-    font.importXML("./ligatures.xml")
+    font.importXML(os.path.abspath(os.path.dirname(__file__)) + "/ligatures.xml")
 
     font.save(out_file)
     
